@@ -7,7 +7,16 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.document_loaders import YoutubeLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
+from langchain.prompts import PromptTemplate
+prompt_template = """Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
+{context}
+
+Question: {question}
+Answer in Markdown format:"""
+PROMPT = PromptTemplate(
+    template=prompt_template, input_variables=["context", "question"]
+)
 
 @st.cache_data
 def split_youtube(url, chunk_chars=4000, overlap=400):
@@ -33,7 +42,7 @@ def create_ix(splits):
 
 
 # Auth
-st.sidebar.image("Img/reading.jpg")
+st.sidebar.image("Img/robot.webp")
 api_key_env = os.environ.get("OPENAI_API_KEY")
 
 if api_key_env:
@@ -60,14 +69,15 @@ st.info("`Ask me a question about the video and I will try to answer it.`", icon
 
 if youtube_url and (api_key_env or api_key):
     # Split and create index
-    d = split_youtube(youtube_url, chunk_chars, overlap=chunk_chars // 5)
+    d = split_youtube(youtube_url, chunk_chars, overlap=chunk_chars // 10)
     ix = create_ix(d)
     # Use ChatGPT with index QA chain
-    llm = OpenAIChat(temperature=0.7)
-    chain = VectorDBQA.from_chain_type(llm, chain_type="stuff", vectorstore=ix)
+    llm = OpenAIChat(temperature=0)
+    chain_type_kwargs = {"prompt": PROMPT}
+    chain = VectorDBQA.from_chain_type(llm, chain_type="stuff", vectorstore=ix, chain_type_kwargs=chain_type_kwargs)
     query = st.text_input("`Please ask a question:` ", "Summarize the transcript for me please.")
     try:
-        st.info("`%s`" % chain.run(query))
+        st.info("%s" % chain.run(query))
     except openai.error.InvalidRequestError:
         # Limitation w/ ChatGPT: 4096 token context length
         # https://github.com/acheong08/ChatGPT/discussions/649
