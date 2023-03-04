@@ -18,6 +18,7 @@ PROMPT = PromptTemplate(
     template=prompt_template, input_variables=["context", "question"]
 )
 
+
 @st.cache_data
 def split_youtube(url, chunk_chars=4000, overlap=400):
     """
@@ -41,6 +42,9 @@ def create_ix(splits):
     return docsearch
 
 
+# Page config
+st.set_page_config(page_title='youtube-gpt', page_icon='Img/robot.webp')
+
 # Auth
 st.sidebar.image("Img/robot.webp")
 api_key_env = os.environ.get("OPENAI_API_KEY")
@@ -58,8 +62,8 @@ chunk_chars = st.sidebar.radio("`Choose chunk size for splitting`", (2000, 3000,
 st.sidebar.info("`Larger chunk size can produce better answers, but may high ChatGPT context limit (4096 tokens)`")
 
 # App
-st.header("`youtube-gpt`")
-st.info("`Hello! I am ChatGPT, linked to the YouTube video URL that you provide.`", icon="👋")
+st.header("youtube-gpt")
+st.info("`Hello! I am ChatGPT, linked to the YouTube video URL that you provide below.`", icon="👋")
 youtube_url = st.text_input("`YouTube URL:` ")
 
 if youtube_url and not youtube_url.startswith("https://www.youtube.com/watch?v="):
@@ -75,7 +79,7 @@ if youtube_url and (api_key_env or api_key):
     llm = OpenAIChat(temperature=0)
     chain_type_kwargs = {"prompt": PROMPT}
     chain = VectorDBQA.from_chain_type(llm, chain_type="stuff", vectorstore=ix, chain_type_kwargs=chain_type_kwargs)
-    query = st.text_input("`Please ask a question:` ", "Summarize the transcript for me please.")
+    query = st.text_input("`Please ask a question:` ", "Create a summary section heading, a topics section heading and add headings for each topic with a summary for each")
     try:
         st.info("%s" % chain.run(query))
     except openai.error.InvalidRequestError:
