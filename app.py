@@ -79,7 +79,7 @@ if youtube_url and (api_key_env or api_key):
     llm = OpenAIChat(temperature=0)
     chain_type_kwargs = {"prompt": PROMPT}
     chain = VectorDBQA.from_chain_type(llm, chain_type="stuff", vectorstore=ix, chain_type_kwargs=chain_type_kwargs)
-    query = st.text_input("`Please ask a question:` ", "Create a summary section heading, a topics section heading and add headings for each topic with a summary for each")
+    query = st.text_input("`Please ask a question:` ", "Create a summary, a list of topics discussed and a section for each topic")
     try:
         st.info("%s" % chain.run(query))
     except openai.error.InvalidRequestError:
