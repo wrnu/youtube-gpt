@@ -1,4 +1,5 @@
 import os
+import re
 import openai
 import streamlit as st
 from langchain.llms import OpenAIChat
@@ -64,10 +65,13 @@ st.sidebar.info("`Larger chunk size can produce better answers, but may high Cha
 # App
 st.header("youtube-gpt")
 st.info("`Hello! I am ChatGPT, linked to the YouTube video URL that you provide below.`", icon="👋")
-youtube_url = st.text_input("`YouTube URL:` ")
 
-if youtube_url and not youtube_url.startswith("https://www.youtube.com/watch?v="):
-    raise ValueError("Please enter a valid YouTube URL")
+youtube_url = st.text_input("`YouTube URL:` ")
+is_valid_url = re.match(r"^(https?://)?(m|www)?\.youtube\.com/watch\?v=.{11}", youtube_url)
+if youtube_url and not is_valid_url:
+    st.error("Please enter a valid YouTube URL")
+if youtube_url and not (api_key_env or api_key):
+    st.error("Please enter a valid OpenAI API key")
 
 st.info("`Ask me a question about the video and I will try to answer it.`", icon="🤖")
 
@@ -86,6 +90,3 @@ if youtube_url and (api_key_env or api_key):
         # Limitation w/ ChatGPT: 4096 token context length
         # https://github.com/acheong08/ChatGPT/discussions/649
         st.warning('Error with model request, often due to context length. Try reducing chunk size.', icon="⚠️")
-
-else:
-    st.info("`Please enter OpenAI Key and a valid YouTube URL`")
